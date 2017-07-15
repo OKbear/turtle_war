@@ -6,9 +6,13 @@
 #include <kobuki_msgs/BumperEvent.h>
 #include <nav_msgs/Odometry.h>
 
-#define TRIAL_TO_RETREAT 30
+#define TRIAL_TO_RETREAT 25
+#define PERIOD_COLLISION_RELEASE 100
 #define TRIAL_TO_DETERMINE_LOCKED 20
 #define LOCKED_THRESHOLD 0.1
+#define DAKOU_RIGHT 0
+#define DAKOU_LEFT 1
+#define PRIOD_DAKOU 15
 
 class RoboCtrl
 {
@@ -40,11 +44,18 @@ public:
 		m_state = STATE_RUN;
 		m_measVel = 0.0;
 
+		// 蛇行用
+		m_dakou = DAKOU_RIGHT;
+		m_nPriodDakou = 0;
+
 		// 衝突用
 		m_nRetreat = 0;
 
 		// ロック解除用
-		m_nLockedDtmCnt = 0;
+		m_collisionRelease = 0;
+
+		// ロック解除用
+		//m_nLockedDtmCnt = 0;
 	}
 
 	void moveRobo()
@@ -55,7 +66,24 @@ public:
 		switch( m_state ){
 			case STATE_RUN:
 				m_frontspeed = 1.0;
-				m_turnspeed = 0.0;
+				ROS_INFO("DAKOU %d", m_dakou);
+				if( ++m_nPriodDakou >= PRIOD_DAKOU ){
+					if( m_dakou == DAKOU_RIGHT ){
+						m_dakou = DAKOU_LEFT;
+						m_turnspeed = 1.8;
+					} else {
+						m_dakou = DAKOU_RIGHT;
+						m_turnspeed = -1.8;
+					}
+					m_nPriodDakou = 0;
+				}
+				if( ++m_collisionRelease >= PERIOD_COLLISION_RELEASE ){
+					m_state = STATE_RETREAT;
+					m_nRetreat = TRIAL_TO_RETREAT;
+					m_frontspeed = -0.5;
+					m_turnspeed = 1.8;
+					m_collisionRelease = 0;
+				}
 				break;
 
 			case STATE_RETREAT:
@@ -63,12 +91,15 @@ public:
 					m_frontspeed = 1.0;
 					m_turnspeed = 0.0;
 					m_state = STATE_RUN;
+					m_collisionRelease = 0;
 				}
 				break;
 
 			case STATE_LOCKED:
 				break;
 		}
+
+		ROS_INFO("NOW %d", m_state);
 
 		//ROS速度データに内部関数値を代入
 		twist.linear.x = m_frontspeed;
@@ -108,18 +139,18 @@ public:
 	{
 		if (bumper.state == 1) {
 			ROS_INFO("HIT");
-			m_frontspeed = -1.0;
+			m_frontspeed = -0.5;
 			switch( bumper.bumper ) {
 				case 0:		// Left hit
-					m_turnspeed  = 1.0;
+					m_turnspeed  = 1.8;
 					break;
 
 				case 1:		// Front hit
-					m_turnspeed  = -1.0;
+					m_turnspeed  = -1.8;
 					break;
 
 				case 2:		// Right hit
-					m_turnspeed  = -1.0;
+					m_turnspeed  = -1.8;
 					break;
 			}
 			m_state = STATE_RETREAT;
@@ -134,11 +165,18 @@ public:
 
 		EState m_state;
 
+		// 蛇行用
+		int m_dakou;
+		int m_nPriodDakou;
+
 		// 壁衝突用
 		int m_nRetreat;
 
 		// ロック解除用
-		int m_nLockedDtmCnt;
+		//int m_nLockedDtmCnt;
+
+		// たまにロック解除
+		int m_collisionRelease;
 
 		double m_frontspeed;
 		double m_turnspeed;

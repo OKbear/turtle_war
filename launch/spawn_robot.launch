@@ -17,6 +17,6 @@
   </node>
   <node pkg="turtle_war" type="velControl.py" name="limit"/>
 
-  <!--<include file="$(find turtle_war)/launch/yourBot.launch">
-  </include>-->
+  <include file="$(find turtle_war)/launch/yourBot.launch">
+  </include>
 </launch>
