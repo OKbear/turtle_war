@@ -33,6 +33,7 @@ private:
 		STATE_RETREAT = 2,
 		STATE_LOCKED  = 3,
 		STATE_CHASE   = 4,
+		STATE_LOST    = 5,
 	};
 
 public:
@@ -49,7 +50,7 @@ public:
 		//twist_pub_ = node.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 1);
 		twist_pub_ = node.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/teleop", 1);
 		//内部関数初期化
-		m_frontspeed = 1.0;
+		m_frontspeed = 0.5;
 		m_turnspeed = 0.0;
 
 		m_state = STATE_RUN;
@@ -83,7 +84,7 @@ public:
 
 		switch( m_state ){
 			case STATE_RUN:
-				m_frontspeed = 1.0;
+				m_frontspeed = 0.5;
 				ROS_INFO("DAKOU %d", m_dakou);
 				if( ++m_nPriodDakou >= PRIOD_DAKOU ){
 					if( m_dakou == DAKOU_RIGHT ){
@@ -106,7 +107,7 @@ public:
 
 			case STATE_RETREAT:
 				if ( --m_nRetreat == 0 ){
-					m_frontspeed = 1.0;
+					m_frontspeed = 0.5;
 					m_turnspeed = 0.0;
 					m_state = STATE_RUN;
 					m_collisionRelease = 0;
@@ -118,11 +119,15 @@ public:
 
 			case STATE_CHASE:
 				if( m_diffPos == 0.0 ) {
-					m_state = STATE_RUN;
+					m_state = STATE_LOST;
 				} else {
-					m_frontspeed = 1.0;
+					m_frontspeed = 0.5;
 					m_turnspeed = m_diffPos * GAIN_CHASE;
 				}
+				break;
+				case STATE_LOST:
+						m_frontspeed = 0.0;
+						m_turnspeed = 2.0;
 				break;
 
 		}
@@ -151,7 +156,7 @@ public:
 				m_state = STATE_LOCKED;
 				m_nLockedDtmCnt = 0;
 
-				m_frontspeed = -1.0;
+				m_frontspeed = -0.5;
 				m_turnspeed  = -1.0;
 			}
 		} else {
