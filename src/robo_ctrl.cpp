@@ -127,7 +127,7 @@ public:
 				break;
 				case STATE_LOST:
 						m_frontspeed = 0.0;
-						m_turnspeed = 2.0;
+						m_turnspeed = 3.0;
 				break;
 
 		}
