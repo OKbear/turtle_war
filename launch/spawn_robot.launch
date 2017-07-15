@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <launch>
 
   <arg name="base"      value="$(optenv TURTLEBOT_BASE kobuki)"/> <!-- create, roomba -->
@@ -16,6 +17,6 @@
   </node>
   <node pkg="turtle_war" type="velControl.py" name="limit"/>
 
-  <include file="$(find turtle_war)/launch/yourBot.launch">
-  </include>
+  <!--<include file="$(find turtle_war)/launch/yourBot.launch">
+  </include>-->
 </launch>

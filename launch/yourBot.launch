@@ -1,3 +1,11 @@
+<?xml version="1.0"?>
 <launch>
-  <node pkg="turtle_war" type="randomBot.py" name="randomBot" output="screen"/>
+  <!--<node pkg="turtle_war" type="randomBot.py" name="randomBot" output="screen"/>-->
+
+  <!--<node pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" name="depthimage_to_laserscan" >
+     <remap from="/image"  to="/camera/depth/image_raw"/>
+  </node>-->
+   <node pkg="turtle_war" type="robo_ctrl" name="robo_ctrl" output="screen"/>
+
+
 </launch>
